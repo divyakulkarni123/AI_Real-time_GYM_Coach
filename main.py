@@ -6,15 +6,9 @@ import pandas as pd
 from services.auth.login_wall import render_login_wall
 from services.state.session_defaults import initial_session_defaults
 from services.config.workout_config import EXERCISE_OPTIONS
-from services.ui.style_loader import (
-    load_css,
-    inject_local_font,
-    inject_webrtc_styles
-)
-from services.persistence.exercise_repository import (
-    init_db,
-    get_users_exercises
-)
+from services.ui.style_loader import load_css, inject_local_font, inject_webrtc_styles
+from services.persistence.exercise_repository import init_db, get_users_exercises
+
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 from services.vision.exercise_video_processor import VideoProcessorClass
 from services.tracking.metrics import sync_metrics_update
@@ -22,39 +16,15 @@ from services.tracking.metrics import sync_metrics_update
 from groq import Groq
 from services.coaching.llm import LLMCoach
 from services.coaching.tts import TextToSpeech
-from services.coaching.voice_pipeline import (
-    VoicePipeline,
-    autoplay_audio
-)
+from services.coaching.voice_pipeline import VoicePipeline, autoplay_audio
 
 
-def metric_card(label, value):
+def render_metric_card(label, value):
     st.markdown(
         f"""
-        <div style="
-            background: linear-gradient(145deg, #1d1f2a, #181923);
-            border: 1px solid #353341;
-            border-radius: 14px;
-            padding: 16px 18px;
-            margin-bottom: 10px;
-        ">
-            <div style="
-                color: #9b9aaa;
-                font-size: 0.78rem;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                margin-bottom: 8px;
-            ">
-                {label}
-            </div>
-
-            <div style="
-                color: #f0d7bb;
-                font-size: 1.35rem;
-                font-weight: 700;
-            ">
-                {value}
-            </div>
+        <div class="metric-card">
+            <div class="metric-label">{label}</div>
+            <div class="metric-value">{value}</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -71,24 +41,187 @@ def main():
     )
 
     # --------------------------------------------------
-    # LOAD EXISTING BACKEND STYLING
+    # LOAD EXISTING PROJECT CSS
     # --------------------------------------------------
 
-    load_css(
-        os.path.join(
-            os.getcwd(),
-            "static",
-            "style.css"
-        )
-    )
+    load_css(os.path.join(os.getcwd(), "static", "style.css"))
 
     inject_local_font(
-        os.path.join(
-            os.getcwd(),
-            "static",
-            "AdobeClean.otf"
-        ),
+        os.path.join(os.getcwd(), "static", "AdobeClean.otf"),
         "AdobeClean"
+    )
+
+    # --------------------------------------------------
+    # ADDITIONAL UI STYLING
+    # --------------------------------------------------
+
+    st.markdown(
+        """
+        <style>
+
+        /* MAIN APP */
+
+        .stApp {
+            background:
+                radial-gradient(circle at top right,
+                rgba(116, 76, 54, 0.12),
+                transparent 35%),
+                #10111b;
+        }
+
+        /* SIDEBAR */
+
+        section[data-testid="stSidebar"] {
+            background:
+                linear-gradient(
+                    180deg,
+                    #181925 0%,
+                    #12131d 100%
+                );
+            border-right: 1px solid #303141;
+        }
+
+        /* SECTION LABELS */
+
+        .section-label {
+            color: #cda47e;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            margin-bottom: 0.7rem;
+        }
+
+        /* HERO */
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f1dfc8;
+            margin-bottom: 0.3rem;
+        }
+
+        .hero-subtitle {
+            color: #aaa4a4;
+            font-size: 1.05rem;
+            margin-bottom: 1.8rem;
+        }
+
+        /* CARDS */
+
+        .coach-card {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(43, 42, 55, 0.95),
+                    rgba(27, 28, 38, 0.95)
+                );
+
+            border: 1px solid #454050;
+
+            border-radius: 22px;
+
+            padding: 28px;
+
+            margin-bottom: 20px;
+
+            box-shadow:
+                0 15px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .coach-title {
+            color: #f1dfc8;
+            font-size: 1.45rem;
+            font-weight: 700;
+            margin-bottom: 0.7rem;
+        }
+
+        .coach-text {
+            color: #aaa4a4;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* STATUS */
+
+        .status-row {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            color: #ddd;
+        }
+
+        .status-row:last-child {
+            border-bottom: none;
+        }
+
+        /* METRIC CARDS */
+
+        .metric-card {
+            background: #20212c;
+            border: 1px solid #333546;
+            border-radius: 12px;
+            padding: 15px 16px;
+            margin-bottom: 12px;
+        }
+
+        .metric-label {
+            color: #9b9bab;
+            font-size: 0.78rem;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            color: #f1dfc8;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        /* SIDEBAR HEADER */
+
+        .sidebar-brand {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #f1dfc8;
+            margin-bottom: 0.3rem;
+        }
+
+        .sidebar-user {
+            color: #aaa4a4;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        /* WORKOUT CARD */
+
+        .active-workout {
+            background: #20212c;
+            border: 1px solid #494250;
+            border-radius: 16px;
+            padding: 18px;
+            margin-top: 12px;
+        }
+
+        .active-workout-title {
+            color: #cda47e;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            margin-bottom: 10px;
+        }
+
+        .active-workout-name {
+            color: #f1dfc8;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .active-workout-plan {
+            color: #aaa4a4;
+            margin-top: 5px;
+        }
+
+        </style>
+        """,
+        unsafe_allow_html=True
     )
 
     # --------------------------------------------------
@@ -117,10 +250,8 @@ def main():
     if "voice_pipeline" not in st.session_state:
 
         try:
-            api_key = os.environ.get(
-                "GROQ_API_KEY",
-                ""
-            )
+
+            api_key = os.environ.get("GROQ_API_KEY", "")
 
             if (
                 not api_key
@@ -129,13 +260,9 @@ def main():
             ):
                 api_key = st.secrets["GROQ_API_KEY"]
 
-            groq_client = Groq(
-                api_key=api_key
-            )
+            groq_client = Groq(api_key=api_key)
 
-            llm_coach = LLMCoach(
-                groq_client
-            )
+            llm_coach = LLMCoach(groq_client)
 
             tts = TextToSpeech()
 
@@ -145,11 +272,8 @@ def main():
             )
 
         except Exception:
-            st.session_state.voice_pipeline = None
 
-    # --------------------------------------------------
-    # WORKOUT STATE
-    # --------------------------------------------------
+            st.session_state.voice_pipeline = None
 
     workout_started = st.session_state.get(
         "workout_started",
@@ -164,47 +288,34 @@ def main():
 
         st.markdown(
             """
-            <div style="padding: 10px 0 16px 0;">
-                <div style="
-                    font-size: 1.7rem;
-                    font-weight: 700;
-                    color: #f1d5b5;
-                    margin-bottom: 6px;
-                ">
-                    🏋️ Apna AI Coach
-                </div>
-
-                <div style="
-                    color: #a8a5b2;
-                    font-size: 0.9rem;
-                ">
-                    Training as your personal AI coach
-                </div>
+            <div class="sidebar-brand">
+                🏋️ Apna AI Coach
             </div>
             """,
             unsafe_allow_html=True
         )
 
+        if st.session_state.username:
+
+            st.markdown(
+                f"""
+                <div class="sidebar-user">
+                    👤 Training as {st.session_state.username}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
         st.divider()
 
-        # ==============================================
+        # ----------------------------------------------
         # BEFORE WORKOUT
-        # ==============================================
+        # ----------------------------------------------
 
         if not workout_started:
 
             st.markdown(
-                """
-                <div style="
-                    color: #cfa77f;
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    letter-spacing: 3px;
-                    margin-bottom: 10px;
-                ">
-                    WORKOUT SETUP
-                </div>
-                """,
+                '<div class="section-label">WORKOUT SETUP</div>',
                 unsafe_allow_html=True
             )
 
@@ -217,24 +328,26 @@ def main():
             col1, col2 = st.columns(2)
 
             with col1:
+
                 plan_sets = st.number_input(
                     "Sets",
-                    min_value=1,
+                    min_value=0,
                     max_value=50,
                     key="plan_sets",
                     step=1
                 )
 
             with col2:
+
                 plan_reps = st.number_input(
                     "Reps",
-                    min_value=1,
+                    min_value=0,
                     max_value=50,
                     key="plan_reps",
                     step=1
                 )
 
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("")
 
             start_session_button = st.button(
                 "START TRAINING →",
@@ -245,27 +358,27 @@ def main():
             if start_session_button:
 
                 st.session_state.exercise_type = plan_exercise
+
                 st.session_state.target_sets = int(plan_sets)
+
                 st.session_state.reps_per_set = int(plan_reps)
 
                 st.session_state.reps = 0
-                st.session_state.current_set_reps = 0
-                st.session_state.sets_completed = 0
 
                 st.session_state.workout_started = True
 
                 st.session_state.set_cycle_started_at = time.time()
 
                 st.session_state.last_saved_sets_completed = 0
+
                 st.session_state.last_notified_sets_completed = 0
+
                 st.session_state.last_notified_workout_complete = False
 
                 if st.session_state.voice_pipeline:
 
                     result = (
-                        st.session_state
-                        .voice_pipeline
-                        .process_event(
+                        st.session_state.voice_pipeline.process_event(
                             event="workout_started",
                             exercise=plan_exercise,
                             metrics={}
@@ -273,6 +386,7 @@ def main():
                     )
 
                     if result:
+
                         (
                             st.session_state.audio_to_play,
                             st.session_state.coach_feedback
@@ -280,84 +394,45 @@ def main():
 
                 st.rerun()
 
-        # ==============================================
+        # ----------------------------------------------
         # ACTIVE WORKOUT
-        # ==============================================
+        # ----------------------------------------------
 
         else:
 
-            exercise = st.session_state.get(
-                "exercise_type",
-                ""
-            )
+            exercise = st.session_state.get("exercise_type")
 
-            sets = st.session_state.get(
-                "target_sets",
-                0
-            )
+            sets = st.session_state.get("target_sets")
 
-            reps = st.session_state.get(
-                "reps_per_set",
-                0
-            )
+            reps = st.session_state.get("reps_per_set")
 
             st.markdown(
-                """
-                <div style="
-                    color: #cfa77f;
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    letter-spacing: 3px;
-                    margin-bottom: 12px;
-                ">
-                    ACTIVE SESSION
-                </div>
-                """,
+                '<div class="section-label">ACTIVE SESSION</div>',
                 unsafe_allow_html=True
             )
-
-            # IMPORTANT:
-            # Valid HTML in ONE clean string.
-            # No broken quote nesting.
 
             st.markdown(
                 f"""
-                <div style="
-                    background: linear-gradient(145deg, #2a252b, #1d1e28);
-                    border: 1px solid #4a3c3c;
-                    border-radius: 18px;
-                    padding: 20px;
-                    margin-bottom: 16px;
-                ">
-                    <div style="
-                        color: #cfa77f;
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                        letter-spacing: 2px;
-                        margin-bottom: 12px;
-                    ">
+                <div class="active-workout">
+
+                    <div class="active-workout-title">
                         CURRENT EXERCISE
                     </div>
 
-                    <div style="
-                        color: #f1e2d2;
-                        font-size: 1.3rem;
-                        font-weight: 700;
-                        margin-bottom: 8px;
-                    ">
+                    <div class="active-workout-name">
                         {exercise}
                     </div>
 
-                    <div style="
-                        color: #aaa4a4;
-                        font-size: 0.9rem;
-                    ">
+                    <div class="active-workout-plan">
                         {sets} sets × {reps} reps
                     </div>
+
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+
+            st.markdown("")
 
             end_session_button = st.button(
                 "END WORKOUT",
@@ -372,9 +447,7 @@ def main():
                 if st.session_state.voice_pipeline:
 
                     result = (
-                        st.session_state
-                        .voice_pipeline
-                        .process_event(
+                        st.session_state.voice_pipeline.process_event(
                             event="workout_completed",
                             exercise=exercise,
                             metrics={}
@@ -390,33 +463,20 @@ def main():
 
                 st.rerun()
 
-        # ==============================================
-        # LIVE METRICS
-        # ==============================================
+        # ----------------------------------------------
+        # PROGRESS
+        # ----------------------------------------------
 
         if workout_started:
 
             st.divider()
 
             st.markdown(
-                """
-                <div style="
-                    color: #cfa77f;
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    letter-spacing: 3px;
-                    margin-bottom: 12px;
-                ">
-                    LIVE PERFORMANCE
-                </div>
-                """,
+                '<div class="section-label">LIVE PROGRESS</div>',
                 unsafe_allow_html=True
             )
 
-            total_reps = st.session_state.get(
-                "reps",
-                0
-            )
+            total_reps = st.session_state.get("reps", 0)
 
             current_set_reps = st.session_state.get(
                 "current_set_reps",
@@ -438,143 +498,140 @@ def main():
                 0
             )
 
-            metric_card(
-                "Total Reps",
+            render_metric_card(
+                "TOTAL REPS",
                 total_reps
             )
 
-            metric_card(
-                "Current Set",
+            render_metric_card(
+                "CURRENT SET",
                 f"{current_set_reps} / {reps_per_set}"
             )
 
-            metric_card(
-                "Sets Completed",
+            render_metric_card(
+                "SETS COMPLETED",
                 f"{sets_completed} / {target_sets}"
             )
 
+            # ------------------------------------------
+            # EXERCISE METRICS
+            # ------------------------------------------
+
+            exercise = st.session_state.get("exercise_type")
+
             st.divider()
 
-            # ==========================================
-            # EXERCISE-SPECIFIC METRICS
-            # ==========================================
+            st.markdown(
+                '<div class="section-label">FORM METRICS</div>',
+                unsafe_allow_html=True
+            )
 
             if exercise == "Squats":
 
-                st.markdown("### Squat Metrics")
-
-                metric_card(
-                    "Knee Angle",
+                render_metric_card(
+                    "KNEE ANGLE",
                     f"{st.session_state.get('knee_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Back Angle",
+                render_metric_card(
+                    "BACK ANGLE",
                     f"{st.session_state.get('back_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Depth Status",
+                render_metric_card(
+                    "DEPTH STATUS",
                     st.session_state.get(
                         "depth_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
             elif exercise == "Push-ups":
 
-                st.markdown("### Push-up Metrics")
-
-                metric_card(
-                    "Elbow Angle",
+                render_metric_card(
+                    "ELBOW ANGLE",
                     f"{st.session_state.get('elbow_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Body Alignment",
+                render_metric_card(
+                    "BODY ALIGNMENT",
                     st.session_state.get(
                         "body_alignment",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
-                metric_card(
-                    "Hip Position",
+                render_metric_card(
+                    "HIP POSITION",
                     st.session_state.get(
                         "hip_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
             elif exercise == "Biceps Curls (Dumbbell)":
 
-                st.markdown("### Curl Metrics")
-
-                metric_card(
-                    "Elbow Angle",
+                render_metric_card(
+                    "ELBOW ANGLE",
                     f"{st.session_state.get('elbow_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Shoulder Stability",
+                render_metric_card(
+                    "SHOULDER STABILITY",
                     st.session_state.get(
                         "shoulder_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
-                metric_card(
-                    "Swing Detection",
+                render_metric_card(
+                    "SWING DETECTION",
                     st.session_state.get(
                         "swing_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
             elif exercise == "Shoulder Press":
 
-                st.markdown("### Shoulder Press Metrics")
-
-                metric_card(
-                    "Elbow Angle",
+                render_metric_card(
+                    "ELBOW ANGLE",
                     f"{st.session_state.get('elbow_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Arm Extension",
+                render_metric_card(
+                    "ARM EXTENSION",
                     st.session_state.get(
                         "extension_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
-                metric_card(
-                    "Back Arch",
+                render_metric_card(
+                    "BACK ARCH",
                     st.session_state.get(
                         "back_arch_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
             elif exercise == "Lunges":
 
-                st.markdown("### Lunge Metrics")
-
-                metric_card(
-                    "Front Knee Angle",
+                render_metric_card(
+                    "FRONT KNEE ANGLE",
                     f"{st.session_state.get('front_knee_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Torso Angle",
+                render_metric_card(
+                    "TORSO ANGLE",
                     f"{st.session_state.get('torso_angle', 0)}°"
                 )
 
-                metric_card(
-                    "Balance Status",
+                render_metric_card(
+                    "BALANCE STATUS",
                     st.session_state.get(
                         "balance_status",
-                        "Waiting..."
+                        "Waiting"
                     )
                 )
 
@@ -584,34 +641,12 @@ def main():
 
     st.markdown(
         """
-        <div style="
-            padding-top: 20px;
-            padding-bottom: 25px;
-        ">
-            <div style="
-                color: #cfa77f;
-                font-size: 0.75rem;
-                font-weight: 700;
-                letter-spacing: 4px;
-                margin-bottom: 14px;
-            ">
-                AI-POWERED FITNESS SYSTEM
-            </div>
+        <div class="hero-title">
+            AI Real-time GYM Coach
+        </div>
 
-            <h1 style="
-                color: #f1e2d2;
-                font-size: 3rem;
-                margin-bottom: 8px;
-            ">
-                Train smarter.
-            </h1>
-
-            <p style="
-                color: #aaa4a4;
-                font-size: 1.1rem;
-            ">
-                Configure your workout and let AI monitor every repetition.
-            </p>
+        <div class="hero-subtitle">
+            Train smarter. Track every repetition. Improve your form.
         </div>
         """,
         unsafe_allow_html=True
@@ -622,86 +657,46 @@ def main():
     # ==================================================
 
     if st.session_state.get("audio_to_play"):
+
         autoplay_audio(
             st.session_state.audio_to_play
         )
 
-    # ==================================================
-    # COACH FEEDBACK
-    # ==================================================
-
     if st.session_state.get("coach_feedback"):
 
-        st.markdown(
-            f"""
-            <div style="
-                background: linear-gradient(145deg, #25232d, #1d1e27);
-                border-left: 4px solid #cfa77f;
-                border-radius: 10px;
-                padding: 18px;
-                margin-bottom: 20px;
-                color: #e7dfd8;
-            ">
-                <div style="
-                    color: #cfa77f;
-                    font-size: 0.8rem;
-                    font-weight: 700;
-                    letter-spacing: 2px;
-                    margin-bottom: 8px;
-                ">
-                    🤖 AI COACH
-                </div>
-
-                {st.session_state.coach_feedback}
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.success(
+            f"🤖 Coach: {st.session_state.coach_feedback}"
         )
 
     # ==================================================
-    # BEFORE WORKOUT
+    # PRE-WORKOUT SCREEN
     # ==================================================
 
     if not workout_started:
 
-        col1, col2 = st.columns([1.4, 1])
+        col1, col2 = st.columns([1.2, 1])
 
         with col1:
 
             st.markdown(
                 """
-                <div style="
-                    background: linear-gradient(145deg, #211f29, #181923);
-                    border: 1px solid #393542;
-                    border-radius: 20px;
-                    padding: 35px;
-                    min-height: 260px;
-                ">
-                    <div style="
-                        color: #cfa77f;
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                        letter-spacing: 3px;
-                        margin-bottom: 18px;
-                    ">
+                <div class="coach-card">
+
+                    <div class="section-label">
                         YOUR TRAINING SYSTEM
                     </div>
 
-                    <h2 style="
-                        color: #f1e2d2;
-                        margin-top: 0;
-                    ">
+                    <div class="coach-title">
                         Ready for real-time feedback
-                    </h2>
+                    </div>
 
-                    <p style="
-                        color: #aaa4a4;
-                        line-height: 1.8;
-                    ">
+                    <div class="coach-text">
                         Select an exercise, configure your sets and repetitions,
-                        then start your session. Your AI coach will monitor your
-                        movement, track repetitions and provide feedback while you train.
-                    </p>
+                        then start your training session. Your AI coach will
+                        monitor movement, track repetitions and provide
+                        feedback during your workout.
+                    </div>
+
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -711,87 +706,69 @@ def main():
 
             st.markdown(
                 """
-                <div style="
-                    background: linear-gradient(145deg, #211f29, #181923);
-                    border: 1px solid #393542;
-                    border-radius: 20px;
-                    padding: 30px;
-                    min-height: 260px;
-                ">
-                    <div style="
-                        color: #cfa77f;
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                        letter-spacing: 3px;
-                        margin-bottom: 18px;
-                    ">
+                <div class="coach-card">
+
+                    <div class="section-label">
                         SYSTEM STATUS
                     </div>
 
-                    <p style="color: #d7d4d9;">
+                    <div class="status-row">
                         🟢 Pose Detection Ready
-                    </p>
+                    </div>
 
-                    <p style="color: #d7d4d9;">
+                    <div class="status-row">
                         🧠 AI Coaching Ready
-                    </p>
+                    </div>
 
-                    <p style="color: #d7d4d9;">
+                    <div class="status-row">
                         🔊 Voice Feedback Ready
-                    </p>
+                    </div>
+
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
     # ==================================================
-    # ACTIVE WORKOUT CAMERA
+    # ACTIVE WORKOUT
     # ==================================================
 
     else:
 
         st.markdown(
-            """
-            <div style="
-                color: #cfa77f;
-                font-size: 0.75rem;
-                font-weight: 700;
-                letter-spacing: 3px;
-                margin-bottom: 12px;
-            ">
-                LIVE MOTION ANALYSIS
-            </div>
-            """,
+            '<div class="section-label">LIVE CAMERA ANALYSIS</div>',
             unsafe_allow_html=True
         )
 
         context = webrtc_streamer(
+
             key="exercise-analysis",
+
             mode=WebRtcMode.SENDRECV,
+
             video_processor_factory=VideoProcessorClass,
+
             rtc_configuration={
                 "iceServers": [
                     {
-                        "urls": "stun:stun.l.google.com:19302"
+                        "urls":
+                        ["stun:stun.l.google.com:19302"]
                     }
                 ]
             },
+
             media_stream_constraints={
                 "video": True,
                 "audio": False
             },
+
             async_processing=True
         )
 
-        # Keep your existing metric synchronization backend
-        sync_metrics_update(context)
-
         # IMPORTANT:
-        # Do not change this unless you intentionally redesign
-        # your real-time refresh mechanism.
-        if context and context.state.playing:
-            time.sleep(0.25)
-            st.rerun()
+        # This keeps your existing backend metrics logic.
+
+        sync_metrics_update(context)
 
         inject_webrtc_styles()
 
@@ -801,46 +778,18 @@ def main():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.divider()
-
     st.markdown(
-        """
-        <div style="
-            color: #cfa77f;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 4px;
-            margin-top: 20px;
-            margin-bottom: 8px;
-        ">
-            PERFORMANCE ARCHIVE
-        </div>
-        """,
+        '<div class="section-label">PERFORMANCE ARCHIVE</div>',
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        """
-        <h2 style="
-            color: #f1e2d2;
-            margin-top: 0;
-        ">
-            Workout History
-        </h2>
-        """,
-        unsafe_allow_html=True
-    )
+    st.subheader("Workout History")
 
-    user_id = st.session_state.get(
-        "user_id",
-        0
-    )
+    user_id = st.session_state.get("user_id", 0)
 
     if isinstance(user_id, int):
 
-        history_rows = get_users_exercises(
-            user_id
-        )
+        history_rows = get_users_exercises(user_id)
 
         arr = [
             {
@@ -857,11 +806,9 @@ def main():
 
         if not df.empty:
 
-            df["Date"] = (
-                pd.to_datetime(
-                    df["Date"]
-                ).dt.date
-            )
+            df["Date"] = pd.to_datetime(
+                df["Date"]
+            ).dt.date
 
             agg_df = (
                 df.groupby(
@@ -887,21 +834,7 @@ def main():
 
         else:
 
-            st.markdown(
-                """
-                <div style="
-                    background: #1b1c25;
-                    border: 1px dashed #44414d;
-                    border-radius: 14px;
-                    padding: 30px;
-                    text-align: center;
-                    color: #9d9aa5;
-                ">
-                    No workout history yet. Complete a session to start building your archive.
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.info("No workout history found yet.")
 
 
 if __name__ == "__main__":
