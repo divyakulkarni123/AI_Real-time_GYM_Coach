@@ -1,32 +1,64 @@
-from services.config.workout_config import PROMPT
+import os
+from groq import Groq
 
 
 class LLMCoach:
-    def __init__(self, groq_client):
-        self.client = groq_client
-        self.history = []
-        self.system_prompt = PROMPT
+    def __init__(self):
+        self.client = Groq(
+            api_key=os.getenv("GROQ_API_KEY")
+        )
 
-    def give_feedback(self, event, issue):
-        prompt = f"Event: {event}"
+    def give_feedback(self, event, issue=None):
 
-        if issue:
-            prompt += f" Form Issue: {issue}"
+        if event == "workout_started":
+            prompt = (
+                "You are a friendly AI gym coach. "
+                "Give one very short motivational sentence "
+                "to start the workout."
+            )
 
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            *self.history[-10:],
-            {"role": "user", "content": prompt}
-        ]
+        elif event == "set_completed":
+            prompt = (
+                "You are an AI gym coach. "
+                "Give one short encouraging sentence because "
+                "the user completed a set."
+            )
+
+        elif event == "workout_completed":
+            prompt = (
+                "You are an AI gym coach. "
+                "Congratulate the user in one short sentence "
+                "for completing the workout."
+            )
+
+        elif issue:
+            prompt = (
+                "You are an AI real-time gym coach. "
+                "Give a very short spoken correction for this problem: "
+                f"{issue} "
+                "Maximum 15 words."
+            )
+
+        else:
+            return None
 
         response = self.client.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=messages,
-            temperature=0.4,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a concise real-time AI gym coach. "
+                        "Keep responses short, clear, and natural."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.5,
+            max_tokens=50
         )
 
-        text = response.choices[0].message.content.strip()
-        self.history.append({"role": "assistant", "content": text})
-
-        return text
-    
+        return response.choices[0].message.content.strip()
