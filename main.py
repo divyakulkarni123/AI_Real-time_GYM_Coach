@@ -430,10 +430,15 @@ def render_workout_history():
 
 def render_live_workout():
     st.markdown("# AI Real-time GYM Coach")
-    st.markdown(
-        "### Live pose detection and AI-powered coaching"
+    st.markdown("### Live pose detection and AI-powered coaching")
+
+    exercise = safe_state_value("exercise_type", "Workout")
+
+    st.info(
+        f"🏋️ Currently training: **{exercise}**"
     )
 
+    # Audio feedback
     if safe_state_value("audio_to_play", None):
         try:
             autoplay_audio(st.session_state.audio_to_play)
@@ -441,36 +446,61 @@ def render_live_workout():
         except Exception as e:
             print(f"Audio playback error: {e}")
 
+    # AI feedback
     feedback = safe_state_value("coach_feedback", "")
     if feedback:
         st.success(f"🤖 **Coach:** {feedback}")
 
+    # Webcam styling
     inject_webrtc_styles()
 
+    st.markdown("### 📹 Live Camera")
+
+    # IMPORTANT:
+    # The webcam component must always render while workout_started is True
     context = webrtc_streamer(
         key="exercise-analysis",
         mode=WebRtcMode.SENDRECV,
         video_processor_factory=VideoProcessorClass,
+
         rtc_configuration={
             "iceServers": [
                 {
-                    "urls": "stun:stun.l.google.com:19302"
+                    "urls": [
+                        "stun:stun.l.google.com:19302"
+                    ]
                 }
             ]
         },
+
         media_stream_constraints={
-            "video": True,
-            "audio": False,
+            "video": {
+                "width": {
+                    "ideal": 1280
+                },
+                "height": {
+                    "ideal": 720
+                },
+                "facingMode": "user"
+            },
+            "audio": False
         },
+
         async_processing=True,
+
+        # Automatically request camera when workout starts
+        desired_playing_state=True
     )
 
-    sync_metrics_update(context)
+    # Update metrics only after context exists
+    if context is not None:
+        try:
+            sync_metrics_update(context)
+        except Exception as e:
+            print(f"Metrics update error: {e}")
 
-    if context.state.playing:
-        time.sleep(0.15)
-        st.rerun()
-
+    # Do NOT put st.rerun() here.
+    # Continuous reruns can interrupt the webcam/WebRTC connection.
 
 def main():
     st.set_page_config(
