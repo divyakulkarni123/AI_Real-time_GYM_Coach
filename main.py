@@ -668,65 +668,73 @@ def main():
             f"🤖 Coach: {st.session_state.coach_feedback}"
         )
 
-    # ==================================================
-    # PRE-WORKOUT SCREEN
-    # ==================================================
+  # ==================================================
+# PRE-WORKOUT SCREEN
+# ==================================================
 
-    if not workout_started:
+if not workout_started:
 
-        col1, col2 = st.columns([1.2, 1])
+    st.markdown(
+        "### Configure your workout and let AI monitor every repetition."
+    )
 
-        with col1:
+    st.markdown("")
+
+    col1, col2 = st.columns([1.15, 1], gap="large")
+
+    # ----------------------------------------------
+    # TRAINING SYSTEM CARD
+    # ----------------------------------------------
+
+    with col1:
+
+        with st.container(border=True):
 
             st.markdown(
-                """
-                <div class="coach-card">
-
-                    <div class="section-label">
-                        YOUR TRAINING SYSTEM
-                    </div>
-
-                    <div class="coach-title">
-                        Ready for real-time feedback
-                    </div>
-
-                    <div class="coach-text">
-                        Select an exercise, configure your sets and repetitions,
-                        then start your training session. Your AI coach will
-                        monitor movement, track repetitions and provide
-                        feedback during your workout.
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+                "##### YOUR TRAINING SYSTEM"
             )
 
-        with col2:
+            st.subheader(
+                "Ready for real-time feedback"
+            )
+
+            st.write(
+                """
+                Select an exercise, configure your sets and repetitions,
+                then start your training session.
+                """
+            )
+
+            st.write(
+                """
+                Your AI coach will analyze your body movement,
+                track repetitions and monitor exercise form
+                while you train.
+                """
+            )
+
+    # ----------------------------------------------
+    # SYSTEM STATUS CARD
+    # ----------------------------------------------
+
+    with col2:
+
+        with st.container(border=True):
 
             st.markdown(
-                """
-                <div class="coach-card">
+                "##### SYSTEM STATUS"
+            )
 
-                    <div class="section-label">
-                        SYSTEM STATUS
-                    </div>
+            st.success(
+                "🟢 Pose Detection Ready"
+            )
 
-                    <div class="status-row">
-                        🟢 Pose Detection Ready
-                    </div>
+            st.success(
+                "🧠 AI Coaching Ready"
+            )
 
-                    <div class="status-row">
-                        🧠 AI Coaching Ready
-                    </div>
-
-                    <div class="status-row">
-                        🔊 Voice Feedback Ready
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.success(
+                "🔊 Voice Feedback Ready"
             )
 
     # ==================================================
