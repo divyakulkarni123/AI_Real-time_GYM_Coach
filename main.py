@@ -649,18 +649,7 @@ def render_live_workout():
         },
 
         media_stream_constraints={
-            "video": {
-                "width": {
-                    "ideal": 640
-                },
-                "height": {
-                    "ideal": 480
-                },
-                "frameRate": {
-                    "ideal": 24,
-                    "max": 24
-                }
-            },
+            "video": True,
             "audio": False,
         },
 
