@@ -631,13 +631,9 @@ def render_live_workout():
     # -----------------------------------------------------
 
     context = webrtc_streamer(
-
         key="exercise-analysis",
-
         mode=WebRtcMode.SENDRECV,
-
         video_processor_factory=VideoProcessorClass,
-
         rtc_configuration={
             "iceServers": [
                 {
@@ -647,13 +643,11 @@ def render_live_workout():
                 }
             ]
         },
-
         media_stream_constraints={
             "video": True,
-            "audio": False,
+            "audio": False
         },
-
-        async_processing=True,
+        async_processing=True
     )
 
     # -----------------------------------------------------
@@ -661,13 +655,9 @@ def render_live_workout():
     # -----------------------------------------------------
 
     if context is not None:
-
         try:
-
             sync_metrics_update(context)
-
         except Exception as e:
-
             print(
                 f"Metrics update error: {e}"
             )
