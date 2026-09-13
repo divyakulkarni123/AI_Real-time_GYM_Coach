@@ -3,7 +3,11 @@ from groq import Groq
 
 
 class LLMCoach:
-    def __init__(self):
+    def __init__(self, client=None):
+        if client is not None:
+            self.client = client
+            return
+
         api_key = os.getenv("GROQ_API_KEY")
 
         if not api_key:
